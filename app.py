@@ -94,8 +94,8 @@ async def offer(request):
     nerfreal = await asyncio.get_event_loop().run_in_executor(None, build_nerfreal,sessionid)
     nerfreals[sessionid] = nerfreal
     
-    #ice_server = RTCIceServer(urls='stun:stun.l.google.com:19302')
-    ice_server = RTCIceServer(urls='stun:stun.miwifi.com:3478')
+    ice_server = RTCIceServer(urls='stun:stun.l.google.com:19302')
+    # ice_server = RTCIceServer(urls='stun:stun.miwifi.com:3478')
     pc = RTCPeerConnection(configuration=RTCConfiguration(iceServers=[ice_server]))
     pcs.add(pc)
 
@@ -105,10 +105,20 @@ async def offer(request):
         if pc.connectionState == "failed":
             await pc.close()
             pcs.discard(pc)
-            del nerfreals[sessionid]
+            # del nerfreals[sessionid]
+            if sessionid in nerfreals:
+                del nerfreals[sessionid]
+                logger.info(f"Session {sessionid} cleaned up")
+            else:
+                logger.warning(f"Session {sessionid} not found in nerfreals")
         if pc.connectionState == "closed":
             pcs.discard(pc)
-            del nerfreals[sessionid]
+            # del nerfreals[sessionid]
+            if sessionid in nerfreals:
+                del nerfreals[sessionid]
+                logger.info(f"Session {sessionid} cleaned up")
+            else:
+                logger.warning(f"Session {sessionid} not found in nerfreals")
 
     player = HumanPlayer(nerfreals[sessionid])
     audio_sender = pc.addTrack(player.audio)
